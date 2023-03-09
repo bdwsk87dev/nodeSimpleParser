@@ -4,43 +4,57 @@ const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 const exceljs = require("exceljs");
 
-/** Для начала нужно получить все категории сайта */
-
 const baseUrl = "https://www.mantoshop.pl";
-
-// Где я могу получить список всех подразделов?
-const catLink = 'https://www.mantoshop.pl/';
-
-// Как называется класс меню, в котором я могу получить список разделов? (без точки!)
-const navClass = 'navbar-subnav';
+const categoryUrl = 'https://www.mantoshop.pl/';
 
 start();
 
 async function start() {
+    /** Find all categories */
     let categories = [];
     try {
-        categories = await getMenuItems(catLink, navClass);
+        categories = await getCategories();
     } catch (error) {
         console.log(error);
     }
     console.log(categories);
-    excelExport();
+
+    if (categories.length === 0) {
+        console.log('Не могу найти категории');
+        return false;
+    }
+
+    getlastPageNum(categories[0]);
+
+
+    /** Find last page */
+    // excelExport();
 }
 
 
-async function getMenuItems(catLink, navClass) {
-    return await axios.get(catLink).then(response => {
-        let result = [];
+async function getCategories() {
+    const dom = await get(categoryUrl);
+    let result = [];
+    const menuItems = dom.querySelectorAll('.navbar-subnav a');
+    menuItems.forEach(item => {
+        result.push(baseUrl + item.href);
+    })
+    return result;
+}
+
+async function getlastPageNum(url) {
+    const dom = await get(url);
+    const lastPage = dom.querySelectorAll('#paging_setting_top ul.pagination li.pagination__element.--item').length;
+    console.log(lastPage);
+}
+
+async function get(url) {
+    return await axios.get(url).then(response => {
         let currentPage = response.data;
         const dom = new JSDOM(currentPage);
-        const menuItems = dom.window.document.querySelectorAll('.' + navClass + ' a');
-        menuItems.forEach(item => {
-            result.push(baseUrl + item.href);
-        })
-        return result;
+        return dom.window.document;
     })
 }
-
 
 function excelExport() {
 
