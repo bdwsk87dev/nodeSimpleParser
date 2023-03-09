@@ -3,11 +3,6 @@
   "version": "1.0.0",
   "description": "simpe parser",
   "main": "parser.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cross-env NODE_ENV=development webpack",
-    "watch": "npm run build -- --watch"
-  },
   "author": "",
   "license": "ISC",
   "dependencies": {
