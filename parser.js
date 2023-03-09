@@ -1,7 +1,7 @@
 const axios = require('axios');
 const fs = require('fs');
 const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
+const {JSDOM} = jsdom;
 const exceljs = require("exceljs");
 
 /** Для начала нужно получить все категории сайта */
@@ -14,27 +14,35 @@ const catLink = 'https://www.mantoshop.pl/';
 // Как называется класс меню, в котором я могу получить список разделов? (без точки!)
 const navClass = 'navbar-subnav';
 
-const categories = getMenuItems(catLink, navClass);
+start();
 
-excelExport();
+async function start() {
+    let categories = [];
+    try {
+        categories = await getMenuItems(catLink, navClass);
+    } catch (error) {
+        console.log(error);
+    }
+    console.log(categories);
+    excelExport();
+}
 
-function getMenuItems(catLink, navClass){
-    axios.get(catLink).then(response=>{
+
+async function getMenuItems(catLink, navClass) {
+    return await axios.get(catLink).then(response => {
         let result = [];
         let currentPage = response.data;
         const dom = new JSDOM(currentPage);
-        const menuItems = dom.window.document.querySelectorAll('.'+navClass+' a');
-        menuItems.forEach(item=>{
+        const menuItems = dom.window.document.querySelectorAll('.' + navClass + ' a');
+        menuItems.forEach(item => {
             result.push(baseUrl + item.href);
         })
-        console.log('Categories : ');
-        console.log(result);
         return result;
     })
 }
 
 
-function excelExport(){
+function excelExport() {
 
     const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
@@ -153,7 +161,6 @@ function excelExport(){
 
 /** Download excel method */
 async function downloadExcel(workbook) {
-
     await workbook.xlsx.writeFile('Parsed.xlsx');
 }
 
