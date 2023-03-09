@@ -27,20 +27,53 @@ async function start() {
     /** Start parsing */
 
 
-    categories = categories.slice(0,2);
-    categories.forEach(url=>{
+    categories = categories.slice(0, 2);
+    categories.forEach(url => {
         parseCategory(url);
     })
 
     // excelExport();
 }
 
-async function parseCategory(url){
+async function parseCategory(url) {
     /** Find last page number */
     console.log('parsing category url :' + url);
-    const lastPage = await getlastPageNum(url);
+    let lastPage = parseInt(await getlastPageNum(url));
     console.log(`Last page number in this category : ${lastPage}`);
+
+    if (lastPage > 0) {
+        lastPage -= 1;
+    }
+
+    for (let currentPage = 0; currentPage <= lastPage; currentPage++) {
+        const preparedUrl = (currentPage === 0) ? url : `${url}?counter=${currentPage}`;
+        console.log(`prepared url : ${preparedUrl}`);
+        const products = await parseProductList(preparedUrl);
+        console.log('products list : ' + products);
+
+        products.forEach(url=>{
+            parseProduct(url);
+        });
+
+    }
 }
+
+
+async function parseProduct(url){
+    console.log(url);
+}
+
+
+async function parseProductList(url) {
+    const dom = await get(url);
+    let result = [];
+    const products = dom.querySelectorAll('.product a');
+    products.forEach(item => {
+        result.push(item.href);
+    })
+    return result;
+}
+
 
 async function getCategories() {
     const dom = await get(categoryUrl);
