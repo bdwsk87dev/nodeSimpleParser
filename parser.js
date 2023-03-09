@@ -10,6 +10,7 @@ const categoryUrl = 'https://www.mantoshop.pl/';
 start();
 
 async function start() {
+
     /** Find all categories */
     let categories = [];
     try {
@@ -18,19 +19,28 @@ async function start() {
         console.log(error);
     }
     console.log(categories);
-
     if (categories.length === 0) {
         console.log('Не могу найти категории');
         return false;
     }
 
-    getlastPageNum(categories[0]);
+    /** Start parsing */
 
 
-    /** Find last page */
+    categories = categories.slice(0,2);
+    categories.forEach(url=>{
+        parseCategory(url);
+    })
+
     // excelExport();
 }
 
+async function parseCategory(url){
+    /** Find last page number */
+    console.log('parsing category url :' + url);
+    const lastPage = await getlastPageNum(url);
+    console.log(`Last page number in this category : ${lastPage}`);
+}
 
 async function getCategories() {
     const dom = await get(categoryUrl);
@@ -45,7 +55,7 @@ async function getCategories() {
 async function getlastPageNum(url) {
     const dom = await get(url);
     const lastPage = dom.querySelectorAll('#paging_setting_top ul.pagination li.pagination__element.--item').length;
-    console.log(lastPage);
+    return parseInt(lastPage);
 }
 
 async function get(url) {
