@@ -7,6 +7,9 @@ const exceljs = require("exceljs");
 const baseUrl = "https://www.mantoshop.pl";
 const categoryUrl = 'https://www.mantoshop.pl/';
 
+let productsResult = [];
+let groupResult = [];
+
 start();
 
 async function start() {
@@ -61,6 +64,40 @@ async function parseCategory(url) {
 
 async function parseProduct(url){
     console.log(url);
+
+    const dom = await get(url);
+    const productId = url.split('-')[2];
+    const productName = dom.querySelector('h1.product_name__name').innerText;
+    const description = dom.querySelector('.--description').innerHTML;
+    let price = document.querySelector('.projector_prices__price').innerText;
+    price = price.replace(',','.').replace(' zł','');
+
+    /** Images */
+    let mainImages = [];
+    let imagesText = '';
+    const photosItems = document.querySelectorAll('.photos__link .photos__photo:not(.--nav)');
+    photosItems.forEach(el=>{
+        mainImages.push(baseUrl+el.getAttribute('src'));
+    })
+    mainImages.forEach(img => {
+        imagesText += img + ',';
+    })
+    imagesText = imagesText.slice(0, -1);
+    productsResult.push({
+        id: productId,
+        name_pl: productName,
+        description_pl: description,
+        price: price,
+        currency: 'PLN',
+        unit: 'шт.',
+        images: imagesText,
+        availability: '+',
+        uid: productId,
+        group_id: product.categories[product.categories.length - 1].id,
+    });
+
+
+
 }
 
 
@@ -113,8 +150,7 @@ function excelExport() {
 
     /** Set up excel collumns */
     worksheet.columns = [
-        {header: 'Код_товара', key: 'id1', width: 10},
-        {header: 'Код_товара', key: 'id2', width: 10},
+        {header: 'Код_товара', key: 'id', width: 10},
         {header: 'Название_позиции_pl', key: 'name_pl', width: 15},
         {header: 'Название_позиции', key: 'name_ru', width: 20},
         {header: 'Название_позиции_укр', key: 'name_uk', width: 20},
@@ -208,9 +244,9 @@ function excelExport() {
         {header: 'HTML_ключевые_слова_группы_укр', key: 'unsigned45', width: 20},
     ];
 
-    // groupResult.forEach(group => {
-    //     worksheetGroups.addRow(group);
-    // });
+    groupResult.forEach(group => {
+        worksheetGroups.addRow(group);
+    });
 
     /** Call the download excel method */
     downloadExcel(workbook);
